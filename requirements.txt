@@ -1,0 +1,11 @@
+flask
+pdfplumber
+python-docx
+google-cloud-aiplatform
+google-cloud-translate
+firebase-admin
+Flask==2.3.3
+Flask-CORS==4.0.0
+PyPDF2==3.0.1
+python-docx==0.8.11
+google-generativeai==0.3.2

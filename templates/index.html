@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegisLens - Legal Document Simplifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-scale-balanced"></i> LegisLens</h1>
+            <p>Demystifying Legal Jargon, One Clause at a Time</p>
+        </header>
+
+        <div class="upload-section">
+            <h2>Upload Your Legal Document</h2>
+            <div class="upload-box" id="uploadBox">
+                <i class="fas fa-file-upload"></i>
+                <p>Drag & drop your PDF or DOCX file here</p>
+                <p>or</p>
+                <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+                <input type="file" id="fileInput" accept=".pdf,.docx" style="display: none;">
+            </div>
+            <div class="upload-progress" id="uploadProgress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress"></div>
+                </div>
+                <p>Processing your document...</p>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="summary-panel">
+                <h2>Document Overview</h2>
+                <div class="summary-content" id="documentSummary"></div>
+            </div>
+
+            <div class="analysis-panel">
+                <div class="clause-sidebar">
+                    <h3>Document Clauses</h3>
+                    <div class="clause-list" id="clauseList"></div>
+                </div>
+
+                <div class="clause-detail">
+                    <div id="noClauseSelected" class="no-selection">
+                        <i class="fas fa-hand-point-left"></i>
+                        <p>Select a clause from the list to see its analysis</p>
+                    </div>
+                    <div id="clauseDetail" style="display: none;">
+                        <h3 id="clauseTitle"></h3>
+                        <div class="risk-badge" id="riskBadge"></div>
+                        <div class="clause-summary" id="clauseSummary"></div>
+                        <div class="original-text">
+                            <h4>Original Text</h4>
+                            <p id="clauseOriginalText"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="qa-section">
+                <h2>Ask a Question About This Document</h2>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="questionInput" placeholder="Type your question here...">
+                        <button id="sendQuestion"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
