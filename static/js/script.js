@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const translationProgress = document.getElementById('translationProgress');
     const exportButton = document.getElementById('exportButton');
 
+
     // Configuration
     const RISK_CONFIG = {
         high: { order: 1, class: 'risk-high' },
@@ -236,6 +237,52 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('UI translation error:', error);
         }
     }
+
+    exportButton.addEventListener('click', exportToPDF);
+    async function exportToPDF() {
+    try {
+        const response = await fetch('/export_pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.pdf_data) {
+            // Convert base64 to blob
+            const byteCharacters = atob(data.pdf_data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+            // Create download link
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = data.filename || 'legislens_analysis_report.pdf';
+            document.body.appendChild(a);
+            a.click();
+
+            // Clean up
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            // Show success message
+            alert('PDF report downloaded successfully!');
+        } else {
+            throw new Error('PDF generation failed');
+        }
+    } catch (error) {
+        console.error('Export error:', error);
+        alert('Failed to generate PDF report. Please try again.');
+    }
+}
 
     // Update UI with translated texts
     function updateUIWithTranslations(translations) {

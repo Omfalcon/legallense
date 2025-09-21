@@ -4,9 +4,22 @@ import os
 import PyPDF2
 import docx
 import google.generativeai as genai
+from xhtml2pdf import pisa
 from io import BytesIO
+import base64
 import re
 from google.cloud import translate_v2 as translate
+from datetime import datetime
+# Add this route for PDF export
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.units import inch, mm
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
+from reportlab.lib.colors import HexColor
+
 
 app = Flask(__name__)
 CORS(app)
@@ -26,6 +39,296 @@ except Exception as e:
 document_data = {"clauses": [], "full_text": "", "summary": ""}
 
 
+def generate_pdf_content(document_data, language='en'):
+    """Generate HTML content for PDF export"""
+
+    # Risk level translations
+    risk_translations = {
+        'en': {'high': 'High Risk', 'medium': 'Medium Risk', 'low': 'Low Risk', 'unknown': 'Unknown Risk'},
+        'hi': {'high': 'उच्च जोखिम', 'medium': 'मध्यम जोखिम', 'low': 'कम जोखिम', 'unknown': 'अज्ञात जोखिम'},
+        'es': {'high': 'Alto Riesgo', 'medium': 'Riesgo Medio', 'low': 'Bajo Riesgo', 'unknown': 'Riesgo Desconocido'},
+        'fr': {'high': 'Risque Élevé', 'medium': 'Risque Moyen', 'low': 'Faible Risque', 'unknown': 'Risque Inconnu'}
+    }
+
+    risk_texts = risk_translations.get(language, risk_translations['en'])
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>LegisLens Analysis Report</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }}
+            .header {{ text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3498db; padding-bottom: 20px; }}
+            .summary {{ background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }}
+            .clause {{ margin-bottom: 25px; padding: 15px; border-left: 4px solid #95a5a6; page-break-inside: avoid; }}
+            .risk-high {{ border-left-color: #ff6b6b; background-color: #fff5f5; }}
+            .risk-medium {{ border-left-color: #ffd93d; background-color: #fff9e6; }}
+            .risk-low {{ border-left-color: #6bcb77; background-color: #f0fff4; }}
+            .risk-badge {{ 
+                display: inline-block; padding: 4px 12px; border-radius: 12px; 
+                font-weight: bold; margin-left: 15px; font-size: 0.8em; 
+            }}
+            .risk-high-badge {{ background-color: #ff6b6b; color: white; }}
+            .risk-medium-badge {{ background-color: #ffd93d; color: #333; }}
+            .risk-low-badge {{ background-color: #6bcb77; color: white; }}
+            .risk-unknown-badge {{ background-color: #95a5a6; color: white; }}
+            .clause-content {{ margin-top: 10px; }}
+            .original-text {{ font-style: italic; color: #666; border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }}
+            @media print {{
+                body {{ margin: 20px; }}
+                .clause {{ page-break-inside: avoid; }}
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>LegisLens Analysis Report</h1>
+            <p>Generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>
+        </div>
+
+        <div class="summary">
+            <h2>Document Summary</h2>
+            <p>{document_data.get('summary', 'No summary available.')}</p>
+        </div>
+
+        <h2>Clause Analysis</h2>
+    """
+
+    # Add each clause to the report
+    for clause in document_data.get("clauses", []):
+        risk_class = f"risk-{clause.get('risk', 'unknown')}"
+        risk_badge = f"<span class='risk-badge risk-{clause.get('risk', 'unknown')}-badge'>{risk_texts.get(clause.get('risk', 'unknown'), 'Unknown Risk')}</span>"
+
+        html_content += f"""
+        <div class="clause {risk_class}">
+            <h3>{clause.get('title', f'Clause {clause.get("id", "")}')} {risk_badge}</h3>
+            <div class="clause-content">
+                <p><strong>Summary:</strong> {clause.get('summary', 'No summary available.')}</p>
+                <div class="original-text">
+                    <p><strong>Original Text:</strong> {clause.get('content', '')[:500]}...</p>
+                </div>
+            </div>
+        </div>
+        """
+
+    html_content += """
+    </body>
+    </html>
+    """
+
+    return html_content
+@app.route('/export_pdf', methods=['POST'])
+def export_pdf():
+    """Generate a professional PDF report"""
+    global document_data
+
+    if not document_data or not document_data.get("clauses"):
+        return jsonify({"error": "No document data available"}), 400
+
+    try:
+        # Create PDF buffer
+        pdf_buffer = BytesIO()
+
+        # Create PDF document with margins
+        doc = SimpleDocTemplate(
+            pdf_buffer,
+            pagesize=A4,
+            leftMargin=20 * mm,
+            rightMargin=20 * mm,
+            topMargin=20 * mm,
+            bottomMargin=20 * mm
+        )
+
+        styles = getSampleStyleSheet()
+        story = []
+
+        # Custom styles
+        title_style = ParagraphStyle(
+            'Title',
+            parent=styles['Heading1'],
+            fontSize=18,
+            spaceAfter=30,
+            alignment=TA_CENTER,
+            textColor=HexColor('#2c3e50'),
+            fontName='Helvetica-Bold'
+        )
+
+        subtitle_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=11,
+            spaceAfter=20,
+            alignment=TA_CENTER,
+            textColor=HexColor('#7f8c8d')
+        )
+
+        heading_style = ParagraphStyle(
+            'Heading2',
+            parent=styles['Heading2'],
+            fontSize=14,
+            spaceAfter=12,
+            spaceBefore=20,
+            textColor=HexColor('#2c3e50'),
+            fontName='Helvetica-Bold'
+        )
+
+        clause_title_style = ParagraphStyle(
+            'ClauseTitle',
+            parent=styles['Heading3'],
+            fontSize=12,
+            spaceAfter=6,
+            textColor=HexColor('#2c3e50'),
+            fontName='Helvetica-Bold'
+        )
+
+        risk_style = ParagraphStyle(
+            'Risk',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=6,
+            textColor=HexColor('#ffffff'),
+            backColor=HexColor('#e74c3c'),
+            alignment=TA_CENTER
+        )
+
+        summary_style = ParagraphStyle(
+            'Summary',
+            parent=styles['Normal'],
+            fontSize=10,
+            spaceAfter=8,
+            textColor=HexColor('#2c3e50'),
+            alignment=TA_JUSTIFY
+        )
+
+        content_style = ParagraphStyle(
+            'Content',
+            parent=styles['Normal'],
+            fontSize=9,
+            spaceAfter=12,
+            textColor=HexColor('#7f8c8d'),
+            alignment=TA_JUSTIFY
+        )
+
+        # Header
+        story.append(Paragraph("LEGISLENS ANALYSIS REPORT", title_style))
+        story.append(Paragraph(f"Generated on {datetime.now().strftime('%Y-%m-%d at %H:%M:%S')}", subtitle_style))
+        story.append(Spacer(1, 20))
+
+        # Document Summary Section
+        story.append(Paragraph("DOCUMENT OVERVIEW", heading_style))
+        summary_text = document_data.get('summary', 'No summary available.')
+        story.append(Paragraph(summary_text, summary_style))
+        story.append(Spacer(1, 25))
+
+        # Risk Legend
+        risk_data = [
+            ['RISK LEVEL', 'DESCRIPTION'],
+            ['HIGH RISK', 'Unusual terms, heavily favors one party, removes standard protections'],
+            ['MEDIUM RISK', 'Somewhat unfavorable terms or slightly unusual clauses'],
+            ['LOW RISK', 'Standard, fair terms that protect both parties equally']
+        ]
+
+        risk_table = Table(risk_data, colWidths=[60 * mm, 100 * mm])
+        risk_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), HexColor('#2c3e50')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (0, 1), HexColor('#e74c3c')),
+            ('BACKGROUND', (0, 2), (0, 2), HexColor('#f39c12')),
+            ('BACKGROUND', (0, 3), (0, 3), HexColor('#27ae60')),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey)
+        ]))
+
+        story.append(Paragraph("RISK ASSESSMENT GUIDE", heading_style))
+        story.append(risk_table)
+        story.append(Spacer(1, 25))
+
+        # Clause Analysis Section
+        story.append(Paragraph("DETAILED CLAUSE ANALYSIS", heading_style))
+        story.append(Spacer(1, 15))
+
+        for i, clause in enumerate(document_data.get("clauses", [])):
+            # Add page break after every 3 clauses to avoid overcrowding
+            if i > 0 and i % 3 == 0:
+                story.append(PageBreak())
+                story.append(Paragraph("DETAILED CLAUSE ANALYSIS (CONTINUED)", heading_style))
+                story.append(Spacer(1, 15))
+
+            # Risk badge with color coding
+            risk_level = clause.get('risk', 'unknown').upper()
+            risk_color = HexColor('#95a5a6')  # Default unknown color
+
+            if risk_level == 'HIGH':
+                risk_color = HexColor('#e74c3c')
+            elif risk_level == 'MEDIUM':
+                risk_color = HexColor('#f39c12')
+            elif risk_level == 'LOW':
+                risk_color = HexColor('#27ae60')
+
+            risk_style.textColor = colors.white
+            risk_style.backColor = risk_color
+
+            # Clause header with risk badge
+            clause_header = [
+                [Paragraph(f"<b>{clause.get('title', f'Clause {clause.get('id', '')}')}</b>", clause_title_style),
+                 Paragraph(risk_level, risk_style)]
+            ]
+
+            clause_table = Table(clause_header, colWidths=[120 * mm, 40 * mm])
+            clause_table.setStyle(TableStyle([
+                ('VALIGN', (0, 0), (-1, 0), 'MIDDLE'),
+                ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+            ]))
+
+            story.append(clause_table)
+
+            # Clause summary
+            summary_text = clause.get('summary', 'No analysis available.')
+            story.append(Paragraph(f"<b>Analysis:</b> {summary_text}", summary_style))
+
+            # Original text (truncated for readability)
+            original_text = clause.get('content', '')
+            if len(original_text) > 3000:
+                original_text = original_text[:3000] + '...'
+
+            story.append(Paragraph(f"<b>Original Text:</b> {original_text}", content_style))
+            story.append(Spacer(1, 20))
+
+        # Footer with page numbers
+        def add_page_number(canvas, doc):
+            canvas.saveState()
+            canvas.setFont('Helvetica', 8)
+            canvas.setFillColor(HexColor('#7f8c8d'))
+            page_num = f"Page {doc.page}"
+            canvas.drawString(100 * mm, 15 * mm, page_num)
+            canvas.drawString(20 * mm, 15 * mm, "Generated by LegisLens - Your Legal Document Assistant")
+            canvas.restoreState()
+
+        # Build PDF
+        doc.build(story, onFirstPage=add_page_number, onLaterPages=add_page_number)
+        pdf_buffer.seek(0)
+
+        # Return PDF as base64
+        pdf_base64 = base64.b64encode(pdf_buffer.getvalue()).decode('utf-8')
+
+        return jsonify({
+            "pdf_data": pdf_base64,
+            "filename": f"LegisLens_Analysis_Report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        })
+
+    except Exception as e:
+        print(f"PDF generation error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"PDF generation failed: {str(e)}"}), 500
 def extract_text_from_file(file):
     """Extract text from uploaded PDF or DOCX file"""
     text = ""
