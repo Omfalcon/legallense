@@ -10,8 +10,6 @@ import base64
 import re
 from google.cloud import translate_v2 as translate
 from datetime import datetime
-# Add this route for PDF export
-from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak

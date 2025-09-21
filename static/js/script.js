@@ -1,9 +1,34 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Firebase Configuration
+    const firebaseConfig = {
+  apiKey: "AIzaSyBYIfdDCxV2YuHV6GFmSMnvBAl6CYuqcME",
+  authDomain: "legislens-42c42.firebaseapp.com",
+  projectId: "legislens-42c42",
+  storageBucket: "legislens-42c42.firebasestorage.app",
+  messagingSenderId: "261250399906",
+  appId: "1:261250399906:web:b31f8446ce18762f9f21fb",
+  measurementId: "G-R46XFV7W7N"
+};
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    
+    // Initialize Google Auth Provider
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+    googleProvider.addScope('email');
+    googleProvider.addScope('profile');
+
     // DOM Elements
     const uploadBox = document.getElementById('uploadBox');
     const fileInput = document.getElementById('fileInput');
     const uploadProgress = document.getElementById('uploadProgress');
     const resultsSection = document.getElementById('resultsSection');
+    const historySection = document.getElementById('historySection');
+    const historyContent = document.getElementById('historyContent');
     const documentSummary = document.getElementById('documentSummary');
     const clauseList = document.getElementById('clauseList');
     const noClauseSelected = document.getElementById('noClauseSelected');
@@ -19,24 +44,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const translationProgress = document.getElementById('translationProgress');
     const exportButton = document.getElementById('exportButton');
 
-    // Onboarding/How It Works Section
-    const onboarding = document.getElementById('onboarding');
-    const dismissOnboarding = document.getElementById('dismissOnboarding');
-
-    function showOnboardingIfNeeded() {
-        if (!localStorage.getItem('onboardingDismissed')) {
-            onboarding.removeAttribute('hidden');
-        } else {
-            onboarding.setAttribute('hidden', 'true');
-        }
-    }
-    if (onboarding && dismissOnboarding) {
-        dismissOnboarding.addEventListener('click', function() {
-            onboarding.setAttribute('hidden', 'true');
-            localStorage.setItem('onboardingDismissed', '1');
-        });
-        showOnboardingIfNeeded();
-    }
+    // Auth Elements
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    const userEmail = document.getElementById('userEmail');
+    const googleSignInBtn = document.getElementById('googleSignInBtn');
+    const signInBtn = document.getElementById('signInBtn');
+    const signUpBtn = document.getElementById('signUpBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
+    const authModal = document.getElementById('authModal');
+    const authForm = document.getElementById('authForm');
+    const authTitle = document.getElementById('authTitle');
+    const authSubmit = document.getElementById('authSubmit');
+    const authSwitchText = document.getElementById('authSwitchText');
+    const authSwitchBtn = document.getElementById('authSwitchBtn');
+    const closeAuth = document.getElementById('closeAuth');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
 
 
     // Configuration
@@ -116,12 +140,212 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let currentDocument = null;
     let currentLanguage = 'en';
+    let currentUser = null;
+    let isSignUp = true;
 
     // Initialize the application
     function initApplication() {
         initLanguageSelector();
         loadLanguagePreference();
         setupEventListeners();
+        setupAuthListeners();
+        checkAuthState();
+    }
+
+    // Auth State Management
+    function checkAuthState() {
+        auth.onAuthStateChanged((user) => {
+            currentUser = user;
+            if (user) {
+                showUserMenu(user);
+                loadUserHistory();
+            } else {
+                showAuthButtons();
+                hideUserData();
+            }
+        });
+    }
+
+    function showUserMenu(user) {
+        authButtons.style.display = 'none';
+        userMenu.style.display = 'flex';
+        userEmail.textContent = user.displayName || user.email;
+    }
+
+    function showAuthButtons() {
+        authButtons.style.display = 'flex';
+        userMenu.style.display = 'none';
+    }
+
+    function hideUserData() {
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) mainContent.style.display = 'none';
+        uploadProgress.style.display = 'none';
+        exportButton.style.display = 'none';
+    }
+
+    // Auth Event Listeners
+    function setupAuthListeners() {
+        googleSignInBtn.addEventListener('click', signInWithGoogle);
+        signInBtn.addEventListener('click', () => openAuthModal(false));
+        signUpBtn.addEventListener('click', () => openAuthModal(true));
+        signOutBtn.addEventListener('click', signOut);
+        closeAuth.addEventListener('click', closeAuthModal);
+        authSwitchBtn.addEventListener('click', toggleAuthMode);
+        authForm.addEventListener('submit', handleAuthSubmit);
+    }
+
+    // Google Sign In
+    async function signInWithGoogle() {
+        try {
+            const result = await auth.signInWithPopup(googleProvider);
+            const user = result.user;
+            console.log('Google sign in successful:', user);
+            closeAuthModal();
+        } catch (error) {
+            console.error('Google sign in error:', error);
+            alert('Google sign in failed: ' + error.message);
+        }
+    }
+
+    function openAuthModal(isSignUpMode) {
+        isSignUp = isSignUpMode;
+        authModal.style.display = 'flex';
+        authTitle.textContent = isSignUp ? 'Sign Up' : 'Sign In';
+        authSubmit.textContent = isSignUp ? 'Sign Up' : 'Sign In';
+        authSwitchText.textContent = isSignUp ? 'Already have an account?' : "Don't have an account?";
+        authSwitchBtn.textContent = isSignUp ? 'Sign In' : 'Sign Up';
+        authForm.reset();
+    }
+
+    function closeAuthModal() {
+        authModal.style.display = 'none';
+    }
+
+    function toggleAuthMode() {
+        isSignUp = !isSignUp;
+        openAuthModal(isSignUp);
+    }
+
+    async function handleAuthSubmit(e) {
+        e.preventDefault();
+        const email = authEmail.value;
+        const password = authPassword.value;
+
+        try {
+            if (isSignUp) {
+                await auth.createUserWithEmailAndPassword(email, password);
+            } else {
+                await auth.signInWithEmailAndPassword(email, password);
+            }
+            closeAuthModal();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    async function signOut() {
+        try {
+            await auth.signOut();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+
+    // Firestore Functions
+    async function saveDocumentToFirestore(documentData) {
+        if (!currentUser) return;
+
+        try {
+            const docRef = await db.collection('users').doc(currentUser.uid).collection('documents').add({
+                ...documentData,
+                uploadedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                userId: currentUser.uid
+            });
+            return docRef.id;
+        } catch (error) {
+            console.error('Error saving document:', error);
+        }
+    }
+
+    async function saveChatMessage(documentId, question, answer) {
+        if (!currentUser) return;
+
+        try {
+            await db.collection('users').doc(currentUser.uid).collection('documents').doc(documentId).collection('chats').add({
+                question,
+                answer,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        } catch (error) {
+            console.error('Error saving chat message:', error);
+        }
+    }
+
+    async function loadUserHistory() {
+        if (!currentUser) return;
+
+        try {
+            const snapshot = await db.collection('users').doc(currentUser.uid).collection('documents')
+                .orderBy('uploadedAt', 'desc')
+                .get();
+
+            if (snapshot.empty) {
+                historyContent.innerHTML = '<p style="text-align: center; color: var(--medium-gray); padding: var(--spacing-lg);">No documents yet. Upload your first document to get started!</p>';
+                return;
+            }
+
+            historyContent.innerHTML = '';
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                const historyItem = createHistoryItem(doc.id, data);
+                historyContent.appendChild(historyItem);
+            });
+
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) mainContent.style.display = 'grid';
+        } catch (error) {
+            console.error('Error loading history:', error);
+        }
+    }
+
+    function createHistoryItem(docId, data) {
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.dataset.docId = docId;
+
+        const uploadDate = data.uploadedAt ? data.uploadedAt.toDate().toLocaleDateString() : 'Unknown';
+        const clauseCount = data.clauses ? data.clauses.length : 0;
+
+        item.innerHTML = `
+            <div class="history-item-header">
+                <h3 class="history-item-title">${data.fileName || 'Document'}</h3>
+                <span class="history-item-date">${uploadDate}</span>
+            </div>
+            <p class="history-item-summary">${data.summary ? data.summary.substring(0, 150) + '...' : 'No summary available'}</p>
+            <div class="history-item-stats">
+                <div class="history-stat">
+                    <i class="fas fa-list"></i>
+                    <span>${clauseCount} clauses</span>
+                </div>
+                <div class="history-stat">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat available</span>
+                </div>
+            </div>
+        `;
+
+        item.addEventListener('click', () => loadDocumentFromHistory(docId, data));
+        return item;
+    }
+
+    async function loadDocumentFromHistory(docId, data) {
+        currentDocument = { ...data, id: docId };
+        displayDocumentSummary(data.summary);
+        displayClauseList(data.clauses);
+        const mainContent = document.getElementById('mainContent');
+        if (mainContent) mainContent.style.display = 'grid';
+        exportButton.style.display = 'block';
     }
 
     // Initialize language selector
@@ -486,7 +710,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Handle file upload
-    function handleFileUpload(file) {
+    async function handleFileUpload(file) {
+        if (!currentUser) {
+            alert('Please sign in to upload documents');
+            return;
+        }
+
         if (!file.type.includes('pdf') && !file.type.includes('word')) {
             alert('Please upload a PDF or DOCX file');
             return;
@@ -509,21 +738,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData();
         formData.append('file', file);
 
-        fetch('/upload', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
             clearInterval(interval);
             progressBar.style.width = '100%';
 
+            // Save to Firestore
+            const documentData = {
+                ...data,
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type
+            };
+            const docId = await saveDocumentToFirestore(documentData);
+
             setTimeout(() => {
                 uploadProgress.style.display = 'none';
-                resultsSection.style.display = 'block';
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) mainContent.style.display = 'grid';
                 exportButton.style.display = 'block';
 
-                currentDocument = data;
+                currentDocument = { ...data, id: docId };
                 if (currentLanguage === 'en') {
                     displayDocumentSummary(data.summary);
                     displayClauseList(data.clauses);
@@ -531,13 +771,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     // If not English, translate the new content
                     translateDocumentContent(currentLanguage);
                 }
+                
+                // Reload history to show new document
+                loadUserHistory();
             }, 500);
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error:', error);
             alert('Error uploading file');
             uploadProgress.style.display = 'none';
-        });
+        }
     }
 
     // Display document summary
@@ -678,6 +920,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const question = questionInput.value.trim();
         if (!question) return;
 
+        if (!currentUser) {
+            alert('Please sign in to ask questions');
+            return;
+        }
+
         // Translate question to English for processing (if needed)
         let processedQuestion = question;
         if (currentLanguage !== 'en') {
@@ -688,25 +935,30 @@ document.addEventListener('DOMContentLoaded', function() {
         addMessage(question, 'user');
         questionInput.value = '';
 
-        // Send question to backend (in English)
-        fetch('/ask', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                question: processedQuestion,
-                language: currentLanguage  // Send current language for answer translation
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
+        try {
+            // Send question to backend (in English)
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question: processedQuestion,
+                    language: currentLanguage  // Send current language for answer translation
+                })
+            });
+            const data = await response.json();
+            
             addMessage(data.answer, 'bot');
-        })
-        .catch(error => {
+            
+            // Save chat message to Firestore
+            if (currentDocument && currentDocument.id) {
+                await saveChatMessage(currentDocument.id, question, data.answer);
+            }
+        } catch (error) {
             console.error('Error:', error);
             addMessage('Sorry, I encountered an error processing your question.', 'bot');
-        });
+        }
     }
 
     function addMessage(text, sender) {
