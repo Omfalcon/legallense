@@ -6,11 +6,11 @@
     <title>LegisLens - Legal Document Simplifier</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../static/css/style.css">
+    <link rel="stylesheet" href="static/css/style.css">
 </head>
 <body>
     <div class="container">
-        <!-- Enhanced header with better visual hierarchy and clearer messaging -->
+        <!-- Enhanced header with better mobile layout and premium styling -->
         <header>
             <div class="header-content">
                 <div class="logo-section">
@@ -24,19 +24,21 @@
                 </div>
                 <div class="header-controls">
                     <div class="language-selector-container">
+                        <i class="fas fa-globe"></i>
                         <select id="languageSelector" class="language-selector">
                             <option value="en">English</option>
                         </select>
                     </div>
-                    <button id="exportButton" class="btn-secondary" style="display: none;">
-                        <i class="fas fa-download"></i> Export PDF
+                    <button id="exportButton" class="btn-export" style="display: none;">
+                        <i class="fas fa-download"></i>
+                        <span class="btn-text">Export PDF</span>
                     </button>
                 </div>
             </div>
             <p class="header-description">Upload any legal document and get instant, easy-to-understand analysis of important clauses and potential risks</p>
         </header>
 
-        <!-- Translation progress indicator -->
+        <!-- Enhanced translation progress with better visual feedback -->
         <div class="translation-progress" id="translationProgress" style="display: none;">
             <div class="progress-container">
                 <div class="progress-icon">
@@ -46,13 +48,13 @@
                     <h3>Translating Content</h3>
                     <p>We're translating the interface and document content...</p>
                     <div class="progress-bar">
-                        <div class="progress"></div>
+                        <div class="progress animated-progress"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Improved upload section with better visual cues and instructions -->
+        <!-- Improved upload section with better visual hierarchy and mobile optimization -->
         <div class="upload-section">
             <div class="upload-header">
                 <h2><i class="fas fa-upload"></i> Get Started</h2>
@@ -65,7 +67,7 @@
                 </div>
                 <div class="upload-content">
                     <h3>Drop your document here</h3>
-                    <p class="upload-text">Supports PDF and Word documents</p>
+                    <p class="upload-text">Supports PDF and Word documents up to 10MB</p>
                     <div class="upload-divider">
                         <span>or</span>
                     </div>
@@ -75,23 +77,40 @@
                     </button>
                     <input type="file" id="fileInput" accept=".pdf,.docx" style="display: none;">
                 </div>
-                <div class="upload-features">
-                    <div class="feature-item">
+            </div>
+
+            <!-- Enhanced feature showcase with better mobile layout -->
+            <div class="upload-features">
+                <div class="feature-item">
+                    <div class="feature-icon">
                         <i class="fas fa-lock"></i>
-                        <span>Secure & Private</span>
                     </div>
-                    <div class="feature-item">
+                    <div class="feature-content">
+                        <span class="feature-title">Secure & Private</span>
+                        <span class="feature-desc">Your documents are encrypted</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
                         <i class="fas fa-zap"></i>
-                        <span>Instant Analysis</span>
                     </div>
-                    <div class="feature-item">
+                    <div class="feature-content">
+                        <span class="feature-title">Instant Analysis</span>
+                        <span class="feature-desc">Results in seconds</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">
                         <i class="fas fa-language"></i>
-                        <span>Multi-Language</span>
+                    </div>
+                    <div class="feature-content">
+                        <span class="feature-title">Multi-Language</span>
+                        <span class="feature-desc">10+ languages supported</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Enhanced progress indicator with better messaging -->
+            <!-- Enhanced progress indicator with smoother animations -->
             <div class="upload-progress" id="uploadProgress" style="display: none;">
                 <div class="progress-container">
                     <div class="progress-icon">
@@ -101,14 +120,28 @@
                         <h3>Analyzing Your Document</h3>
                         <p>We're reading through your document and identifying important clauses...</p>
                         <div class="progress-bar">
-                            <div class="progress"></div>
+                            <div class="progress animated-progress"></div>
+                        </div>
+                        <div class="progress-steps">
+                            <div class="step active">
+                                <i class="fas fa-upload"></i>
+                                <span>Uploading</span>
+                            </div>
+                            <div class="step">
+                                <i class="fas fa-search"></i>
+                                <span>Analyzing</span>
+                            </div>
+                            <div class="step">
+                                <i class="fas fa-check"></i>
+                                <span>Complete</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Improved results section with better organization and visual hierarchy -->
+        <!-- Improved results section with better mobile responsiveness -->
         <div class="results-section" id="resultsSection" style="display: none;">
             <div class="summary-panel">
                 <div class="panel-header">
@@ -120,11 +153,14 @@
 
             <div class="main-analysis-container">
                 <div class="analysis-panel">
-                    <!-- Enhanced clause sidebar with better visual organization -->
+                    <!-- Enhanced clause sidebar with better mobile behavior -->
                     <div class="clause-sidebar">
                         <div class="sidebar-header">
                             <h3><i class="fas fa-list-ul"></i> Important Clauses</h3>
                             <p class="sidebar-subtitle">Click any clause to see details</p>
+                            <button class="mobile-toggle" id="clauseToggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
                         </div>
                         <div class="risk-legend">
                             <div class="legend-item">
@@ -143,7 +179,7 @@
                         <div class="clause-list" id="clauseList"></div>
                     </div>
 
-                    <!-- Enhanced clause detail view with better readability -->
+                    <!-- Enhanced clause detail view with better typography and spacing -->
                     <div class="clause-detail">
                         <div id="noClauseSelected" class="no-selection">
                             <div class="no-selection-icon">
@@ -171,11 +207,11 @@
                     </div>
                 </div>
 
-                <!-- Moved Q&A section to the right side as a sidebar -->
-                <div class="qa-sidebar">
+                <!-- Enhanced Q&A section with better mobile layout -->
+                <div class="qa-section">
                     <div class="qa-header">
                         <h3><i class="fas fa-comments"></i> Ask Questions</h3>
-                        <p>Have questions? Ask me!</p>
+                        <p>Have questions about your document? Ask me!</p>
                     </div>
                     <div class="chat-container">
                         <div class="chat-messages" id="chatMessages">
@@ -207,6 +243,6 @@
         </div>
     </div>
 
-    <script src="../static/js/script.js"></script>
+    <script src="static/js/script.js"></script>
 </body>
 </html>

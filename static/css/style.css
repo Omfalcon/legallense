@@ -1,4 +1,4 @@
-/* Updated CSS variables with more accessible and modern color palette */
+/* Enhanced CSS variables with better color system and spacing */
 :root {
   --primary: #1e40af;
   --primary-light: #3b82f6;
@@ -23,6 +23,7 @@
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 * {
@@ -31,15 +32,17 @@
   box-sizing: border-box;
 }
 
-/* Enhanced body styling with better typography and background */
+/* Enhanced body styling with better mobile optimization */
 body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%);
   color: var(--dark);
   line-height: 1.6;
   min-height: 100vh;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .container {
@@ -49,9 +52,10 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: 0 20px 60px var(--shadow-lg);
   overflow: hidden;
+  min-height: calc(100vh - 2 * var(--spacing-md));
 }
 
-/* Completely redesigned header with better visual hierarchy */
+/* Completely redesigned header with better mobile responsiveness */
 header {
   background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: var(--white);
@@ -74,13 +78,16 @@ header::before {
 .header-content {
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--spacing-lg);
 }
 
 .logo-section {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
-  margin-bottom: var(--spacing-lg);
 }
 
 .logo-icon {
@@ -92,6 +99,12 @@ header::before {
   align-items: center;
   justify-content: center;
   backdrop-filter: blur(10px);
+  transition: var(--transition);
+}
+
+.logo-icon:hover {
+  transform: scale(1.05);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .logo-icon i {
@@ -112,14 +125,76 @@ header::before {
   font-weight: 500;
 }
 
+/* Enhanced header controls with better mobile layout */
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+.language-selector-container {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: rgba(255, 255, 255, 0.1);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.language-selector-container i {
+  color: var(--white);
+  opacity: 0.8;
+}
+
+.language-selector {
+  background: transparent;
+  border: none;
+  color: var(--white);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+}
+
+.language-selector option {
+  background: var(--dark);
+  color: var(--white);
+}
+
+.btn-export {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  backdrop-filter: blur(10px);
+}
+
+.btn-export:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
 .header-description {
   font-size: 1.1rem;
   opacity: 0.95;
   max-width: 600px;
   line-height: 1.5;
+  position: relative;
+  z-index: 1;
 }
 
-/* Enhanced upload section with better visual appeal and user guidance */
+/* Enhanced upload section with better visual appeal */
 .upload-section {
   padding: var(--spacing-xl) var(--spacing-lg);
   background: var(--light);
@@ -152,7 +227,7 @@ header::before {
   border: 3px dashed var(--border);
   border-radius: var(--radius-lg);
   padding: var(--spacing-xl);
-  transition: all 0.3s ease;
+  transition: var(--transition);
   cursor: pointer;
   background: var(--white);
   text-align: center;
@@ -175,6 +250,12 @@ header::before {
   font-size: 4rem;
   color: var(--primary-light);
   opacity: 0.8;
+  transition: var(--transition);
+}
+
+.upload-box:hover .upload-icon i {
+  transform: scale(1.1);
+  opacity: 1;
 }
 
 .upload-content h3 {
@@ -222,7 +303,7 @@ header::before {
   font-size: 1rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition);
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-sm);
@@ -239,10 +320,11 @@ header::before {
   font-size: 1.1rem;
 }
 
+/* Enhanced upload features with better mobile layout */
 .upload-features {
-  display: flex;
-  justify-content: center;
-  gap: var(--spacing-xl);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-lg);
   margin-top: var(--spacing-xl);
   padding-top: var(--spacing-lg);
   border-top: 1px solid var(--border);
@@ -251,18 +333,54 @@ header::before {
 .feature-item {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
-  color: var(--medium-gray);
-  font-size: 0.9rem;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  transition: var(--transition);
 }
 
-.feature-item i {
-  color: var(--success);
+.feature-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px var(--shadow);
+}
+
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.feature-icon i {
+  color: var(--white);
   font-size: 1rem;
 }
 
-/* Enhanced progress indicator with better visual feedback */
-.upload-progress {
+.feature-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.feature-title {
+  font-weight: 600;
+  color: var(--dark);
+  font-size: 0.9rem;
+}
+
+.feature-desc {
+  font-size: 0.8rem;
+  color: var(--medium-gray);
+}
+
+/* Enhanced progress indicator with step visualization */
+.upload-progress,
+.translation-progress {
   margin-top: var(--spacing-xl);
   background: var(--white);
   border-radius: var(--radius-lg);
@@ -314,6 +432,7 @@ header::before {
   background: var(--light-gray);
   border-radius: 4px;
   overflow: hidden;
+  margin-bottom: var(--spacing-md);
 }
 
 .progress {
@@ -322,6 +441,50 @@ header::before {
   width: 0%;
   transition: width 0.5s ease;
   border-radius: 4px;
+}
+
+.animated-progress {
+  animation: progressPulse 2s ease-in-out infinite;
+}
+
+@keyframes progressPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Added progress steps visualization */
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  opacity: 0.5;
+  transition: var(--transition);
+}
+
+.step.active {
+  opacity: 1;
+  color: var(--primary);
+}
+
+.step i {
+  font-size: 1.2rem;
+}
+
+.step span {
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 /* Enhanced results section with better organization */
@@ -364,15 +527,21 @@ header::before {
   line-height: 1.7;
 }
 
-/* Enhanced analysis panel with better layout and visual hierarchy */
-.analysis-panel {
-  display: flex;
+/* Enhanced main analysis container with better responsive layout */
+.main-analysis-container {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
 }
 
+.analysis-panel {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--spacing-xl);
+}
+
+/* Enhanced clause sidebar with mobile toggle */
 .clause-sidebar {
-  flex: 1;
   background: var(--light);
   padding: var(--spacing-lg);
   border-radius: var(--radius-lg);
@@ -382,6 +551,7 @@ header::before {
 
 .sidebar-header {
   margin-bottom: var(--spacing-lg);
+  position: relative;
 }
 
 .sidebar-header h3 {
@@ -400,8 +570,22 @@ header::before {
   margin: 0;
 }
 
+.mobile-toggle {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+}
+
 .risk-legend {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-md);
   margin-bottom: var(--spacing-lg);
   padding: var(--spacing-md);
@@ -442,13 +626,13 @@ header::before {
   gap: var(--spacing-sm);
 }
 
-/* Enhanced clause items with better visual design and accessibility */
+/* Enhanced clause items with better visual design */
 .clause-item {
   background: var(--white);
   padding: var(--spacing-md);
   border-radius: var(--radius);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition);
   border: 2px solid transparent;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -543,9 +727,8 @@ header::before {
   line-height: 1.4;
 }
 
-/* Enhanced clause detail view with better readability and organization */
+/* Enhanced clause detail view with better readability */
 .clause-detail {
-  flex: 2;
   background: var(--white);
   padding: var(--spacing-xl);
   border-radius: var(--radius-lg);
@@ -675,7 +858,7 @@ header::before {
   color: var(--dark);
 }
 
-/* Enhanced Q&A section with better user experience */
+/* Enhanced Q&A section with better layout */
 .qa-section {
   background: var(--light);
   padding: var(--spacing-xl);
@@ -686,7 +869,7 @@ header::before {
   margin-bottom: var(--spacing-lg);
 }
 
-.qa-header h2 {
+.qa-header h3 {
   font-size: 1.6rem;
   color: var(--primary);
   margin-bottom: var(--spacing-sm);
@@ -792,7 +975,7 @@ header::before {
   border-radius: var(--radius-lg);
   outline: none;
   font-size: 1rem;
-  transition: all 0.3s ease;
+  transition: var(--transition);
   background: var(--white);
 }
 
@@ -809,7 +992,7 @@ header::before {
   height: 48px;
   border-radius: 50%;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -821,27 +1004,35 @@ header::before {
 }
 
 /* Enhanced responsive design for better mobile experience */
-@media (max-width: 1024px) {
-  .analysis-panel {
-    flex-direction: column;
+@media (max-width: 1200px) {
+  .main-analysis-container {
+    grid-template-columns: 1fr;
   }
 
-  .clause-sidebar {
-    max-height: 400px;
+  .analysis-panel {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
   body {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
   }
 
   .container {
     border-radius: var(--radius);
+    min-height: calc(100vh - 2 * var(--spacing-sm));
   }
 
   header {
     padding: var(--spacing-lg);
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+    text-align: center;
   }
 
   .logo-section {
@@ -854,10 +1045,12 @@ header::before {
     font-size: 2rem;
   }
 
+  .header-controls {
+    justify-content: center;
+  }
+
   .upload-features {
-    flex-direction: column;
-    gap: var(--spacing-md);
-    align-items: center;
+    grid-template-columns: 1fr;
   }
 
   .progress-container {
@@ -865,9 +1058,25 @@ header::before {
     text-align: center;
   }
 
-  .risk-legend {
-    flex-direction: column;
-    gap: var(--spacing-sm);
+  .progress-steps {
+    justify-content: center;
+  }
+
+  .analysis-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .mobile-toggle {
+    display: block;
+  }
+
+  .clause-sidebar {
+    max-height: none;
+  }
+
+  .clause-sidebar.collapsed .clause-list,
+  .clause-sidebar.collapsed .risk-legend {
+    display: none;
   }
 
   .clause-header {
@@ -882,6 +1091,10 @@ header::before {
 
   .message {
     max-width: 95%;
+  }
+
+  .btn-text {
+    display: none;
   }
 }
 
@@ -903,9 +1116,15 @@ header::before {
     width: 44px;
     height: 44px;
   }
+
+  .feature-item {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--spacing-sm);
+  }
 }
 
-/* Added smooth scrolling and focus styles for better accessibility */
+/* Added smooth scrolling and enhanced focus styles */
 html {
   scroll-behavior: smooth;
 }
@@ -916,7 +1135,8 @@ html {
 }
 
 button:focus,
-input:focus {
+input:focus,
+select:focus {
   outline: 2px solid var(--primary-light);
   outline-offset: 2px;
 }
@@ -933,9 +1153,24 @@ input:focus {
   }
 }
 
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .clause-item,
 .message {
   animation: fadeIn 0.3s ease-out;
+}
+
+.feature-item {
+  animation: slideIn 0.3s ease-out;
 }
 
 /* Enhanced clause sorting and priority display */
@@ -953,4 +1188,31 @@ input:focus {
 
 .clause-item.risk-unknown {
   order: 4;
+}
+
+/* Added custom scrollbar styling */
+.clause-list::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar,
+.original-text-container p::-webkit-scrollbar {
+  width: 6px;
+}
+
+.clause-list::-webkit-scrollbar-track,
+.chat-messages::-webkit-scrollbar-track,
+.original-text-container p::-webkit-scrollbar-track {
+  background: var(--light-gray);
+  border-radius: 3px;
+}
+
+.clause-list::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb,
+.original-text-container p::-webkit-scrollbar-thumb {
+  background: var(--medium-gray);
+  border-radius: 3px;
+}
+
+.clause-list::-webkit-scrollbar-thumb:hover,
+.chat-messages::-webkit-scrollbar-thumb:hover,
+.original-text-container p::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-light);
 }

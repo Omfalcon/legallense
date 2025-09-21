@@ -19,6 +19,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const translationProgress = document.getElementById('translationProgress');
     const exportButton = document.getElementById('exportButton');
 
+    // Onboarding/How It Works Section
+    const onboarding = document.getElementById('onboarding');
+    const dismissOnboarding = document.getElementById('dismissOnboarding');
+
+    function showOnboardingIfNeeded() {
+        if (!localStorage.getItem('onboardingDismissed')) {
+            onboarding.removeAttribute('hidden');
+        } else {
+            onboarding.setAttribute('hidden', 'true');
+        }
+    }
+    if (onboarding && dismissOnboarding) {
+        dismissOnboarding.addEventListener('click', function() {
+            onboarding.setAttribute('hidden', 'true');
+            localStorage.setItem('onboardingDismissed', '1');
+        });
+        showOnboardingIfNeeded();
+    }
+
 
     // Configuration
     const RISK_CONFIG = {
