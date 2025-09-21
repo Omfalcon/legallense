@@ -21,7 +21,7 @@ from reportlab.lib.colors import HexColor
 
 app = Flask(__name__)
 CORS(app)
-app.secret_key = os.environ.get('SECRET_KEY') or 'legislens-secret-key'
+app.secret_key = os.environ.get('SECRET_KEY', 'legislens-secret-key-change-in-production')
 
 # Configure Gemini (you'll need to set GEMINI_API_KEY in your environment)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
@@ -36,7 +36,9 @@ except Exception as e:
 # Store processed documents in memory (for demo purposes)
 document_data = {"clauses": [], "full_text": "", "summary": ""}
 
-
+@app.route('/health')
+def health_check():
+    return jsonify({"status": "healthy"})
 def generate_pdf_content(document_data, language='en'):
     """Generate HTML content for PDF export"""
 
@@ -891,8 +893,6 @@ def get_current_language():
 
 
 if __name__ == '__main__':
-    # Check if the API key is set
-    if not os.environ.get('GEMINI_API_KEY'):
-        print("WARNING: GEMINI_API_KEY environment variable is not set!")
-        print("The application will use mock data for demonstration.")
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    app.run(host='0.0.0.0', port=port, debug=debug)
