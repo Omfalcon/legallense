@@ -178,8 +178,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function hideUserData() {
-        const mainContent = document.getElementById('mainContent');
-        if (mainContent) mainContent.style.display = 'none';
+        historySection.style.display = 'none';
+        resultsSection.style.display = 'none';
         uploadProgress.style.display = 'none';
         exportButton.style.display = 'none';
     }
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .get();
 
             if (snapshot.empty) {
-                historyContent.innerHTML = '<p style="text-align: center; color: var(--medium-gray); padding: var(--spacing-lg);">No documents yet. Upload your first document to get started!</p>';
+                historyContent.innerHTML = '<p style="text-align: center; color: var(--medium-gray);">No documents yet. Upload your first document to get started!</p>';
                 return;
             }
 
@@ -302,8 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 historyContent.appendChild(historyItem);
             });
 
-            const mainContent = document.getElementById('mainContent');
-            if (mainContent) mainContent.style.display = 'grid';
+            historySection.style.display = 'block';
         } catch (error) {
             console.error('Error loading history:', error);
         }
@@ -343,8 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
         currentDocument = { ...data, id: docId };
         displayDocumentSummary(data.summary);
         displayClauseList(data.clauses);
-        const mainContent = document.getElementById('mainContent');
-        if (mainContent) mainContent.style.display = 'grid';
+        resultsSection.style.display = 'block';
+        historySection.style.display = 'none';
         exportButton.style.display = 'block';
     }
 
@@ -759,8 +758,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             setTimeout(() => {
                 uploadProgress.style.display = 'none';
-                const mainContent = document.getElementById('mainContent');
-                if (mainContent) mainContent.style.display = 'grid';
+                resultsSection.style.display = 'block';
+                historySection.style.display = 'none';
                 exportButton.style.display = 'block';
 
                 currentDocument = { ...data, id: docId };

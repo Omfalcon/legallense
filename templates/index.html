@@ -159,35 +159,37 @@
             </div>
         </div>
 
-        <!-- Main Content Area - Full Page Layout -->
-        <div class="main-content" id="mainContent" style="display: none;">
-            <!-- Left Sidebar - History -->
-            <div class="left-sidebar" id="historySection">
-                <div class="sidebar-header">
-                    <h2><i class="fas fa-history"></i> Your Documents</h2>
-                    <p>Previously analyzed documents and chat history</p>
+        <!-- Upload History Section -->
+        <div class="history-section" id="historySection" style="display: none;">
+            <div class="history-header">
+                <h2><i class="fas fa-history"></i> Your Documents</h2>
+                <p>Previously analyzed documents and chat history</p>
+            </div>
+            <div class="history-content" id="historyContent">
+                <!-- History items will be populated here -->
+            </div>
+        </div>
+
+        <!-- Improved results section with better mobile responsiveness -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="summary-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-file-alt"></i> Document Summary</h2>
+                    <p>Here's what we found in your document</p>
                 </div>
-                <div class="history-content" id="historyContent">
-                    <!-- History items will be populated here -->
-                </div>
+                <div class="summary-content" id="documentSummary"></div>
             </div>
 
-            <!-- Center Content - Document Analysis -->
-            <div class="center-content" id="resultsSection">
-                <div class="summary-panel">
-                    <div class="panel-header">
-                        <h2><i class="fas fa-file-alt"></i> Document Summary</h2>
-                        <p>Here's what we found in your document</p>
-                    </div>
-                    <div class="summary-content" id="documentSummary"></div>
-                </div>
-
-                <div class="analysis-container">
-                    <!-- Clause Sidebar -->
+            <div class="main-analysis-container">
+                <div class="analysis-panel">
+                    <!-- Enhanced clause sidebar with better mobile behavior -->
                     <div class="clause-sidebar">
                         <div class="sidebar-header">
                             <h3><i class="fas fa-list-ul"></i> Important Clauses</h3>
                             <p class="sidebar-subtitle">Click any clause to see details</p>
+                            <button class="mobile-toggle" id="clauseToggle">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
                         </div>
                         <div class="risk-legend">
                             <div class="legend-item">
@@ -206,7 +208,7 @@
                         <div class="clause-list" id="clauseList"></div>
                     </div>
 
-                    <!-- Clause Detail View -->
+                    <!-- Enhanced clause detail view with better typography and spacing -->
                     <div class="clause-detail">
                         <div id="noClauseSelected" class="no-selection">
                             <div class="no-selection-icon">
@@ -233,36 +235,36 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right Sidebar - Chat -->
-            <div class="right-sidebar" id="chatSection">
-                <div class="chat-header">
-                    <h3><i class="fas fa-comments"></i> Ask Questions</h3>
-                    <p>Have questions about your document? Ask me!</p>
-                </div>
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages">
-                        <div class="welcome-message">
-                            <div class="bot-avatar">
-                                <i class="fas fa-robot"></i>
-                            </div>
-                            <div class="message bot-message">
-                                <p>Hi! I've analyzed your document. Feel free to ask me questions like:</p>
-                                <ul class="suggestion-list">
-                                    <li>"What are the main risks?"</li>
-                                    <li>"Can I cancel this agreement?"</li>
-                                    <li>"What are my obligations?"</li>
-                                </ul>
+                <!-- Enhanced Q&A section with better mobile layout -->
+                <div class="qa-section">
+                    <div class="qa-header">
+                        <h3><i class="fas fa-comments"></i> Ask Questions</h3>
+                        <p>Have questions about your document? Ask me!</p>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="welcome-message">
+                                <div class="bot-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message bot-message">
+                                    <p>Hi! I've analyzed your document. Feel free to ask me questions like:</p>
+                                    <ul class="suggestion-list">
+                                        <li>"What are the main risks?"</li>
+                                        <li>"Can I cancel this agreement?"</li>
+                                        <li>"What are my obligations?"</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="chat-input">
-                        <div class="input-container">
-                            <input type="text" id="questionInput" placeholder="Ask about your document...">
-                            <button id="sendQuestion" class="send-button">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
+                        <div class="chat-input">
+                            <div class="input-container">
+                                <input type="text" id="questionInput" placeholder="Ask about your document...">
+                                <button id="sendQuestion" class="send-button">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
