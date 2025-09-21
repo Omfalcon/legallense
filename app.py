@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
 import os
 import PyPDF2
@@ -6,12 +6,21 @@ import docx
 import google.generativeai as genai
 from io import BytesIO
 import re
+from google.cloud import translate_v2 as translate
 
 app = Flask(__name__)
 CORS(app)
+app.secret_key = os.environ.get('SECRET_KEY') or 'legislens-secret-key'
 
 # Configure Gemini (you'll need to set GEMINI_API_KEY in your environment)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Initialize translation client
+try:
+    translate_client = translate.Client()
+except Exception as e:
+    print(f"Translation client initialization failed: {e}")
+    translate_client = None
 
 # Store processed documents in memory (for demo purposes)
 document_data = {"clauses": [], "full_text": "", "summary": ""}
@@ -138,12 +147,23 @@ def split_into_clauses(text):
     return clauses
 
 
+print("GEMINI_API_KEY exists:", bool(os.environ.get('GEMINI_API_KEY')))
+print("GOOGLE_APPLICATION_CREDENTIALS exists:", bool(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')))
+
+
 def generate_summary(text):
     """Generate a summary of the entire document using Gemini"""
     try:
+        # Debug information
+        api_key = os.environ.get('GEMINI_API_KEY')
+        print(f"GEMINI_API_KEY present: {bool(api_key)}")
+
         # For demo purposes, use mock data if no API key
-        if not os.environ.get('GEMINI_API_KEY'):
-            return "This rental agreement outlines the terms between John Doe (Tenant) and ABC Properties (Landlord) for the property at 123 Main St. Key points include a 12-month lease term, monthly rent of $1500, and a security deposit of one month's rent."
+        if not api_key:
+            demo_msg = "This is a DEMO summary. Please add your GEMINI_API_KEY to get real analysis.\n\n"
+            demo_msg += "This rental agreement outlines the terms between John Doe (Tenant) and ABC Properties (Landlord). "
+            demo_msg += "Key points include a 12-month lease term, monthly rent of $1500, and a security deposit."
+            return demo_msg
 
         model = genai.GenerativeModel('gemini-2.0-flash')
         prompt = f"""
@@ -152,13 +172,15 @@ def generate_summary(text):
         Keep it under 150 words.
 
         Document text:
-        {text[:10000]}  # Limit text length for the prompt
+        {text[:5000]}  # Reduced length for safety
         """
 
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"Unable to generate summary: {str(e)}"
+        error_msg = f"Unable to generate summary: {str(e)}"
+        print(error_msg)
+        return error_msg
 
 
 def analyze_clause(clause_text):
@@ -306,6 +328,7 @@ def upload_file():
         "clauses": analyzed_clauses
     })
 
+
 @app.route('/analyze_clause/<int:clause_id>', methods=['GET'])
 def analyze_clause_route(clause_id):
     """Analyze a specific clause"""
@@ -328,11 +351,12 @@ def analyze_clause_route(clause_id):
 
 @app.route('/ask', methods=['POST'])
 def ask_question():
-    """Handle questions about the document"""
+    """Handle questions about the document with translation support"""
     global document_data
 
     data = request.json
     question = data.get('question', '')
+    target_language = data.get('language', 'en')  # Get target language for answer translation
 
     if not question:
         return jsonify({"error": "No question provided"}), 400
@@ -343,7 +367,226 @@ def ask_question():
     # Answer the question based on the document
     answer = answer_question(question, document_data["full_text"])
 
+    # If a specific language is requested and not English, translate the answer
+    if target_language != 'en':
+        try:
+            # For demo purposes without API key
+            if not os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') and translate_client is None:
+                # Simple word-based translation for demo
+                translations = {
+                    'hi': {
+                        'Based on the document': 'दस्तावेज़ के आधार पर',
+                        'termination notice period': 'समाप्ति सूचना अवधि',
+                        'payments are due': 'भुगतान देय हैं',
+                        'confidential information': 'गोपनीय जानकारी',
+                        'liability is limited': 'दायित्व सीमित है',
+                        'governing law': 'लागू कानून'
+                    },
+                    'es': {
+                        'Based on the document': 'Según el documento',
+                        'termination notice period': 'período de preaviso de terminación',
+                        'payments are due': 'los pagos vencen',
+                        'confidential information': 'información confidencial',
+                        'liability is limited': 'la responsabilidad es limitada',
+                        'governing law': 'ley aplicable'
+                    },
+                    'fr': {
+                        'Based on the document': 'Selon le document',
+                        'termination notice period': 'délai de préavis de résiliation',
+                        'payments are due': 'les paiements sont dus',
+                        'confidential information': 'informations confidentielles',
+                        'liability is limited': 'la responsabilité est limitée',
+                        'governing law': 'droit applicable'
+                    }
+                }
+
+                # Simple word replacement for demo
+                lang_translations = translations.get(target_language, {})
+                for eng_phrase, trans_phrase in lang_translations.items():
+                    answer = answer.replace(eng_phrase, trans_phrase)
+            elif translate_client:
+                # Real translation with Google Cloud Translation API
+                result = translate_client.translate(answer, target_language=target_language)
+                answer = result['translatedText']
+        except Exception as e:
+            print(f"Answer translation failed: {e}")
+            # Continue with English answer if translation fails
+
     return jsonify({"answer": answer})
+
+
+@app.route('/translate', methods=['POST'])
+def translate_text():
+    """Translate text to the target language"""
+    data = request.json
+    text = data.get('text', '')
+    target_language = data.get('language', 'en')
+
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+
+    try:
+        # For demo purposes without API key
+        if not os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') and translate_client is None:
+            # Simple mock translation for demo
+            translations = {
+                'hi': {
+                    'hello': 'नमस्ते',
+                    'document': 'दस्तावेज़',
+                    'analysis': 'विश्लेषण',
+                    'summary': 'सारांश',
+                    'risk': 'जोखिम',
+                    'clause': 'खंड',
+                    'payment': 'भुगतान',
+                    'termination': 'समाप्ति',
+                    'confidential': 'गोपनीय',
+                    'liability': 'दायित्व'
+                },
+                'es': {
+                    'hello': 'hola',
+                    'document': 'documento',
+                    'analysis': 'análisis',
+                    'summary': 'resumen',
+                    'risk': 'riesgo',
+                    'clause': 'cláusula',
+                    'payment': 'pago',
+                    'termination': 'terminación',
+                    'confidential': 'confidencial',
+                    'liability': 'responsabilidad'
+                },
+                'fr': {
+                    'hello': 'bonjour',
+                    'document': 'document',
+                    'analysis': 'analyse',
+                    'summary': 'résumé',
+                    'risk': 'risque',
+                    'clause': 'clause',
+                    'payment': 'paiement',
+                    'termination': 'résiliation',
+                    'confidential': 'confidentiel',
+                    'liability': 'responsabilité'
+                }
+            }
+
+            # Simple word-based translation for demo
+            translated_text = text
+            lang_translations = translations.get(target_language, {})
+            for eng_word, trans_word in lang_translations.items():
+                translated_text = translated_text.replace(eng_word, trans_word)
+                translated_text = translated_text.replace(eng_word.capitalize(), trans_word.capitalize())
+
+            return jsonify({"translated_text": translated_text})
+
+        # Real translation with Google Cloud Translation API (without context prefix)
+        result = translate_client.translate(text, target_language=target_language)
+        return jsonify({"translated_text": result['translatedText']})
+    except Exception as e:
+        print(f"Translation failed: {e}")
+        return jsonify({"translated_text": text})  # Return original text on error
+
+
+@app.route('/translate_bulk', methods=['POST'])
+def translate_bulk():
+    """Translate multiple text items to the target language"""
+    data = request.json
+    texts = data.get('texts', {})
+    target_language = data.get('language', 'en')
+
+    if not texts:
+        return jsonify({"error": "No texts provided"}), 400
+
+    try:
+        # Store language preference in session
+        session['current_language'] = target_language
+
+        # For demo purposes without API key
+        if not os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') and translate_client is None:
+            # Mock translations for demo
+            mock_translations = {
+                'en': {
+                    'documentSummary': 'Document Summary',
+                    'clausesHeader': 'Document Clauses',
+                    'askQuestion': 'Ask a Question About This Document',
+                    'questionPlaceholder': 'Type your question here...',
+                    'exportButton': 'Export PDF',
+                    'uploadText': 'Drag & drop your PDF or DOCX file here',
+                    'browseFiles': 'Browse Files',
+                    'processing': 'Processing your document...',
+                    'noClauses': 'No clauses detected. Try a different document.',
+                    'selectClause': 'Select a clause from the list to see its analysis',
+                    'originalText': 'Original Text',
+                    'riskLevel': 'Risk Level',
+                    'sendButton': 'Send'
+                },
+                'hi': {
+                    'documentSummary': 'दस्तावेज़ सारांश',
+                    'clausesHeader': 'दस्तावेज़ खंड',
+                    'askQuestion': 'इस दस्तावेज़ के बारे में प्रश्न पूछें',
+                    'questionPlaceholder': 'अपना प्रश्न यहाँ टाइप करें...',
+                    'exportButton': 'PDF निर्यात करें',
+                    'uploadText': 'अपनी PDF या DOCX फ़ाइल यहाँ खींचें और छोड़ें',
+                    'browseFiles': 'फ़ाइलें ब्राउज़ करें',
+                    'processing': 'आपका दस्तावेज़ प्रसंस्करण किया जा रहा है...',
+                    'noClauses': 'कोई खंड नहीं मिला। कृपया कोई अन्य दस्तावेज़ आज़माएं।',
+                    'selectClause': 'विश्लेषण देखने के लिए सूची से एक खंड चुनें',
+                    'originalText': 'मूल पाठ',
+                    'riskLevel': 'जोखिम स्तर',
+                    'sendButton': 'भेजें'
+                },
+                'es': {
+                    'documentSummary': 'Resumen del Documento',
+                    'clausesHeader': 'Cláusulas del Documento',
+                    'askQuestion': 'Hacer una Pregunta Sobre Este Documento',
+                    'questionPlaceholder': 'Escribe tu pregunta aquí...',
+                    'exportButton': 'Exportar PDF',
+                    'uploadText': 'Arrastra y suelta tu archivo PDF o DOCX aquí',
+                    'browseFiles': 'Examinar Archivos',
+                    'processing': 'Procesando tu documento...',
+                    'noClauses': 'No se detectaron cláusulas. Intenta con un documento diferente.',
+                    'selectClause': 'Selecciona una cláusula de la lista para ver su análisis',
+                    'originalText': 'Texto Original',
+                    'riskLevel': 'Nivel de Riesgo',
+                    'sendButton': 'Enviar'
+                },
+                'fr': {
+                    'documentSummary': 'Résumé du Document',
+                    'clausesHeader': 'Clauses du Document',
+                    'askQuestion': 'Poser une Question sur ce Document',
+                    'questionPlaceholder': 'Tapez votre question ici...',
+                    'exportButton': 'Exporter PDF',
+                    'uploadText': 'Glissez-déposez votre fichier PDF or DOCX ici',
+                    'browseFiles': 'Parcourir les Fichiers',
+                    'processing': 'Traitement de votre document...',
+                    'noClauses': 'Aucune clause détectée. Essayez un document différent.',
+                    'selectClause': 'Sélectionnez une clause dans la liste pour voir son analyse',
+                    'originalText': 'Texte Original',
+                    'riskLevel': 'Niveau de Risque',
+                    'sendButton': 'Envoyer'
+                }
+            }
+
+            translated_texts = mock_translations.get(target_language, mock_translations['en'])
+            return jsonify({"translated_texts": translated_texts})
+
+        # Real translation with Google Cloud Translation API (without context prefix)
+        translated_texts = {}
+        for key, text in texts.items():
+            if text:  # Only translate non-empty texts
+                # Translate without adding context prefix
+                result = translate_client.translate(text, target_language=target_language)
+                translated_texts[key] = result['translatedText']
+            else:
+                translated_texts[key] = text
+
+        return jsonify({"translated_texts": translated_texts})
+    except Exception as e:
+        print(f"Bulk translation failed: {e}")
+        return jsonify({"error": f"Bulk translation failed: {str(e)}"}), 500
+
+
+@app.route('/current_language', methods=['GET'])
+def get_current_language():
+    return jsonify({"language": session.get('current_language', 'en')})
 
 
 if __name__ == '__main__':
@@ -351,5 +594,4 @@ if __name__ == '__main__':
     if not os.environ.get('GEMINI_API_KEY'):
         print("WARNING: GEMINI_API_KEY environment variable is not set!")
         print("The application will use mock data for demonstration.")
-
     app.run(debug=True)

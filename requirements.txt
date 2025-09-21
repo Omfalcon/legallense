@@ -9,3 +9,6 @@ Flask-CORS==4.0.0
 PyPDF2==3.0.1
 python-docx==0.8.11
 google-generativeai==0.3.2
+google-cloud-translate==2.0.1
+xhtml2pdf==0.2.10
+reportlab==4.0.4

@@ -4,76 +4,209 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LegisLens - Legal Document Simplifier</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
     <div class="container">
+        <!-- Enhanced header with better visual hierarchy and clearer messaging -->
         <header>
-            <h1><i class="fas fa-scale-balanced"></i> LegisLens</h1>
-            <p>Demystifying Legal Jargon, One Clause at a Time</p>
+            <div class="header-content">
+                <div class="logo-section">
+                    <div class="logo-icon">
+                        <i class="fas fa-shield-check"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>LegisLens</h1>
+                        <span class="tagline">Your Legal Document Assistant</span>
+                    </div>
+                </div>
+                <div class="header-controls">
+                    <div class="language-selector-container">
+                        <select id="languageSelector" class="language-selector">
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                    <button id="exportButton" class="btn-secondary" style="display: none;">
+                        <i class="fas fa-download"></i> Export PDF
+                    </button>
+                </div>
+            </div>
+            <p class="header-description">Upload any legal document and get instant, easy-to-understand analysis of important clauses and potential risks</p>
         </header>
 
-        <div class="upload-section">
-            <h2>Upload Your Legal Document</h2>
-            <div class="upload-box" id="uploadBox">
-                <i class="fas fa-file-upload"></i>
-                <p>Drag & drop your PDF or DOCX file here</p>
-                <p>or</p>
-                <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Browse Files</button>
-                <input type="file" id="fileInput" accept=".pdf,.docx" style="display: none;">
-            </div>
-            <div class="upload-progress" id="uploadProgress" style="display: none;">
-                <div class="progress-bar">
-                    <div class="progress"></div>
+        <!-- Translation progress indicator -->
+        <div class="translation-progress" id="translationProgress" style="display: none;">
+            <div class="progress-container">
+                <div class="progress-icon">
+                    <i class="fas fa-language fa-spin"></i>
                 </div>
-                <p>Processing your document...</p>
+                <div class="progress-content">
+                    <h3>Translating Content</h3>
+                    <p>We're translating the interface and document content...</p>
+                    <div class="progress-bar">
+                        <div class="progress"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="results-section" id="resultsSection" style="display: none;">
-            <div class="summary-panel">
-                <h2>Document Overview</h2>
-                <div class="summary-content" id="documentSummary"></div>
+        <!-- Improved upload section with better visual cues and instructions -->
+        <div class="upload-section">
+            <div class="upload-header">
+                <h2><i class="fas fa-upload"></i> Get Started</h2>
+                <p class="upload-subtitle">Upload your contract, agreement, or any legal document</p>
             </div>
 
-            <div class="analysis-panel">
-                <div class="clause-sidebar">
-                    <h3>Document Clauses</h3>
-                    <div class="clause-list" id="clauseList"></div>
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
                 </div>
-
-                <div class="clause-detail">
-                    <div id="noClauseSelected" class="no-selection">
-                        <i class="fas fa-hand-point-left"></i>
-                        <p>Select a clause from the list to see its analysis</p>
+                <div class="upload-content">
+                    <h3>Drop your document here</h3>
+                    <p class="upload-text">Supports PDF and Word documents</p>
+                    <div class="upload-divider">
+                        <span>or</span>
                     </div>
-                    <div id="clauseDetail" style="display: none;">
-                        <h3 id="clauseTitle"></h3>
-                        <div class="risk-badge" id="riskBadge"></div>
-                        <div class="clause-summary" id="clauseSummary"></div>
-                        <div class="original-text">
-                            <h4>Original Text</h4>
-                            <p id="clauseOriginalText"></p>
+                    <button class="btn-primary btn-large" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open"></i>
+                        Choose File
+                    </button>
+                    <input type="file" id="fileInput" accept=".pdf,.docx" style="display: none;">
+                </div>
+                <div class="upload-features">
+                    <div class="feature-item">
+                        <i class="fas fa-lock"></i>
+                        <span>Secure & Private</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-zap"></i>
+                        <span>Instant Analysis</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-language"></i>
+                        <span>Multi-Language</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enhanced progress indicator with better messaging -->
+            <div class="upload-progress" id="uploadProgress" style="display: none;">
+                <div class="progress-container">
+                    <div class="progress-icon">
+                        <i class="fas fa-cog fa-spin"></i>
+                    </div>
+                    <div class="progress-content">
+                        <h3>Analyzing Your Document</h3>
+                        <p>We're reading through your document and identifying important clauses...</p>
+                        <div class="progress-bar">
+                            <div class="progress"></div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="qa-section">
-                <h2>Ask a Question About This Document</h2>
-                <div class="chat-container">
-                    <div class="chat-messages" id="chatMessages"></div>
-                    <div class="chat-input">
-                        <input type="text" id="questionInput" placeholder="Type your question here...">
-                        <button id="sendQuestion"><i class="fas fa-paper-plane"></i></button>
+        <!-- Improved results section with better organization and visual hierarchy -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <div class="summary-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-file-alt"></i> Document Summary</h2>
+                    <p>Here's what we found in your document</p>
+                </div>
+                <div class="summary-content" id="documentSummary"></div>
+            </div>
+
+            <div class="main-analysis-container">
+                <div class="analysis-panel">
+                    <!-- Enhanced clause sidebar with better visual organization -->
+                    <div class="clause-sidebar">
+                        <div class="sidebar-header">
+                            <h3><i class="fas fa-list-ul"></i> Important Clauses</h3>
+                            <p class="sidebar-subtitle">Click any clause to see details</p>
+                        </div>
+                        <div class="risk-legend">
+                            <div class="legend-item">
+                                <span class="risk-dot risk-high"></span>
+                                <span>High Risk</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="risk-dot risk-medium"></span>
+                                <span>Medium Risk</span>
+                            </div>
+                            <div class="legend-item">
+                                <span class="risk-dot risk-low"></span>
+                                <span>Low Risk</span>
+                            </div>
+                        </div>
+                        <div class="clause-list" id="clauseList"></div>
+                    </div>
+
+                    <!-- Enhanced clause detail view with better readability -->
+                    <div class="clause-detail">
+                        <div id="noClauseSelected" class="no-selection">
+                            <div class="no-selection-icon">
+                                <i class="fas fa-hand-point-left"></i>
+                            </div>
+                            <h3>Select a Clause</h3>
+                            <p>Choose any clause from the list to see a detailed explanation in plain English</p>
+                        </div>
+                        <div id="clauseDetail" style="display: none;">
+                            <div class="clause-header">
+                                <h3 id="clauseTitle"></h3>
+                                <div class="risk-badge" id="riskBadge"></div>
+                            </div>
+                            <div class="clause-explanation">
+                                <h4><i class="fas fa-lightbulb"></i> What This Means</h4>
+                                <div class="clause-summary" id="clauseSummary"></div>
+                            </div>
+                            <div class="original-text">
+                                <h4><i class="fas fa-quote-left"></i> Original Text</h4>
+                                <div class="original-text-container">
+                                    <p id="clauseOriginalText"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Moved Q&A section to the right side as a sidebar -->
+                <div class="qa-sidebar">
+                    <div class="qa-header">
+                        <h3><i class="fas fa-comments"></i> Ask Questions</h3>
+                        <p>Have questions? Ask me!</p>
+                    </div>
+                    <div class="chat-container">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="welcome-message">
+                                <div class="bot-avatar">
+                                    <i class="fas fa-robot"></i>
+                                </div>
+                                <div class="message bot-message">
+                                    <p>Hi! I've analyzed your document. Feel free to ask me questions like:</p>
+                                    <ul class="suggestion-list">
+                                        <li>"What are the main risks?"</li>
+                                        <li>"Can I cancel this agreement?"</li>
+                                        <li>"What are my obligations?"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chat-input">
+                            <div class="input-container">
+                                <input type="text" id="questionInput" placeholder="Ask about your document...">
+                                <button id="sendQuestion" class="send-button">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="../static/js/script.js"></script>
 </body>
 </html>
